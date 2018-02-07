@@ -156,7 +156,7 @@ boolean bt_Cal_Initialized = false;
 
 int stop_Counter = 0;
 int run_State = 1;
-int yes;
+int yes = 0;
 
 void setup() {
   Wire.begin();        // Wire library required for I2CEncoder library
@@ -410,8 +410,10 @@ void loop()
             {
               if (!(digitalRead(ci_Light_Sensor)))
               {
-               // yes = 1;
-                
+                yes = 1;
+              }
+              if (yes == 1)
+              {
                 servo_LeftMotor.writeMicroseconds(ci_Left_Motor_Stop);
                 servo_RightMotor.writeMicroseconds(ci_Right_Motor_Stop);
                 servo_ArmMotor.write(ci_Arm_Servo_Extended);
@@ -419,32 +421,45 @@ void loop()
                 stop_Counter++;
                 if (stop_Counter == 1000)
                 {
-                run_State++;
+                  servo_ArmMotor.write(ci_Arm_Servo_Retracted);
+                  run_State++;
+                  stop_Counter = 0;
                 }
               }
-              else if (!(yes = 1))
+              else
               {
-                servo_LeftMotor.writeMicroseconds(1600);
-                servo_RightMotor.writeMicroseconds(1400);
+                servo_LeftMotor.writeMicroseconds(1585);
+                servo_RightMotor.writeMicroseconds(1415);
                 stop_Counter = 0;
                 servo_ArmMotor.write(ci_Arm_Servo_Retracted);
                 servo_GripMotor.write(ci_Grip_Motor_Open);
-
-                
               }
             }
-            else if (run_State == 5)
+            else if (run_State == 5) {
+              stop_Counter++;
+              if (stop_Counter < 1000) {
+                servo_RightMotor.writeMicroseconds(1600);
+                servo_LeftMotor.writeMicroseconds(1400);
+              }
+              if (stop_Counter > 1000) {
+                run_State++;
+              }
+            }
+            else if (run_State == 6)
             {
               if ((!(ui_Left_Line_Tracker_Data < (ui_Left_Line_Tracker_Dark - ci_Line_Tracker_Tolerance))) &&
                   (ui_Middle_Line_Tracker_Data < (ui_Middle_Line_Tracker_Dark - ci_Line_Tracker_Tolerance)) &&
                   (!(ui_Right_Line_Tracker_Data < (ui_Right_Line_Tracker_Dark - ci_Line_Tracker_Tolerance))))
               {
+                servo_LeftMotor.writeMicroseconds(ci_Left_Motor_Stop);
+                servo_RightMotor.writeMicroseconds(ci_Right_Motor_Stop);
                 run_State = 1;
+                //ui_Robot_State_Index = 0;
               }
-              else {
-              servo_ArmMotor.write(ci_Arm_Servo_Retracted);
-                servo_RightMotor.writeMicroseconds(1600);
-                servo_LeftMotor.writeMicroseconds(1400);
+              else
+              {
+                servo_LeftMotor.writeMicroseconds(1415);
+                servo_RightMotor.writeMicroseconds(ui_Left_Motor_Speed);
               }
               // retract
               // reverse
