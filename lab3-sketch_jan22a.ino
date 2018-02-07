@@ -1,3 +1,4 @@
+
 /*
 
   MSE 2202 MSEBot base code for Labs 3 and 4
@@ -104,8 +105,8 @@ unsigned long ul_Echo_Time;
 unsigned int ui_Left_Line_Tracker_Data;
 unsigned int ui_Middle_Line_Tracker_Data;
 unsigned int ui_Right_Line_Tracker_Data;
-unsigned int ui_Motors_Speed = 1600;        // Default run speed
-unsigned int ui_Motors_Reverse = 1430;
+unsigned int ui_Motors_Speed = 1669;        // Default run speed
+unsigned int ui_Motors_Reverse = 1400;
 unsigned int ui_Left_Motor_Speed;
 unsigned int ui_Right_Motor_Speed;
 unsigned int ui_Left_Motor_Reverse;
@@ -155,6 +156,7 @@ boolean bt_Cal_Initialized = false;
 
 int stop_Counter = 0;
 int run_State = 1;
+int yes;
 
 void setup() {
   Wire.begin();        // Wire library required for I2CEncoder library
@@ -271,6 +273,7 @@ void loop()
         encoder_LeftMotor.zero();
         encoder_RightMotor.zero();
         ui_Mode_Indicator_Index = 0;
+        servo_GripMotor.write(ci_Grip_Motor_Open);
         break;
       }
 
@@ -330,6 +333,7 @@ void loop()
                 if (stop_Counter == 500)
                 {
                   run_State += 1;
+                  stop_Counter == 0;
                   //ui_Robot_State_Index = 0;
                 }
               }
@@ -358,9 +362,9 @@ void loop()
             else if (run_State == 2)
             {
               // turn towards led
-              if ((!(ui_Left_Line_Tracker_Data < (ui_Left_Line_Tracker_Dark - ci_Line_Tracker_Tolerance)))&&
-                  (ui_Middle_Line_Tracker_Data < (ui_Middle_Line_Tracker_Dark - ci_Line_Tracker_Tolerance))&&
-                  (!(ui_Right_Line_Tracker_Data < (ui_Right_Line_Tracker_Dark - ci_Line_Tracker_Tolerance)))) 
+              if ((!(ui_Left_Line_Tracker_Data < (ui_Left_Line_Tracker_Dark - ci_Line_Tracker_Tolerance))) &&
+                  (ui_Middle_Line_Tracker_Data < (ui_Middle_Line_Tracker_Dark - ci_Line_Tracker_Tolerance)) &&
+                  (!(ui_Right_Line_Tracker_Data < (ui_Right_Line_Tracker_Dark - ci_Line_Tracker_Tolerance))))
               {
                 servo_LeftMotor.writeMicroseconds(ci_Left_Motor_Stop);
                 servo_RightMotor.writeMicroseconds(ci_Right_Motor_Stop);
@@ -402,27 +406,52 @@ void loop()
                 servo_RightMotor.writeMicroseconds(ui_Right_Motor_Speed);
               }
             }
-            else if(run_State == 4)
+            else if (run_State == 4)
             {
               if (!(digitalRead(ci_Light_Sensor)))
               {
+               // yes = 1;
+                
                 servo_LeftMotor.writeMicroseconds(ci_Left_Motor_Stop);
                 servo_RightMotor.writeMicroseconds(ci_Right_Motor_Stop);
-                ui_Robot_State_Index = 0;
+                servo_ArmMotor.write(ci_Arm_Servo_Extended);
+                servo_GripMotor.write(ci_Grip_Motor_Closed);
+                stop_Counter++;
+                if (stop_Counter == 1000)
+                {
+                run_State++;
+                }
               }
-              else
+              else if (!(yes = 1))
               {
-                servo_LeftMotor.writeMicroseconds(1580);
-                servo_RightMotor.writeMicroseconds(1420);
+                servo_LeftMotor.writeMicroseconds(1600);
+                servo_RightMotor.writeMicroseconds(1400);
+                stop_Counter = 0;
+                servo_ArmMotor.write(ci_Arm_Servo_Retracted);
+                servo_GripMotor.write(ci_Grip_Motor_Open);
+
+                
               }
-              // locate flag (turn in place)
-              // extend
-              // grab
+            }
+            else if (run_State == 5)
+            {
+              if ((!(ui_Left_Line_Tracker_Data < (ui_Left_Line_Tracker_Dark - ci_Line_Tracker_Tolerance))) &&
+                  (ui_Middle_Line_Tracker_Data < (ui_Middle_Line_Tracker_Dark - ci_Line_Tracker_Tolerance)) &&
+                  (!(ui_Right_Line_Tracker_Data < (ui_Right_Line_Tracker_Dark - ci_Line_Tracker_Tolerance))))
+              {
+                run_State = 1;
+              }
+              else {
+              servo_ArmMotor.write(ci_Arm_Servo_Retracted);
+                servo_RightMotor.writeMicroseconds(1600);
+                servo_LeftMotor.writeMicroseconds(1400);
+              }
               // retract
               // reverse
               // spin 180
               // reaquire track
               // return to line following state
+
             }
           }
           else
