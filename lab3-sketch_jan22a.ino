@@ -1,14 +1,10 @@
-
 /*
-
   MSE 2202 MSEBot base code for Labs 3 and 4
   Language: Arduino
   Authors: Michael Naish and Eugen Porter & Curtis Ames & Nick Baxter
   Date: 16/01/17
-
   Rev 1 - Initial version
   Rev 2 - Update for MSEduino v. 2
-
 */
 
 #include <Servo.h>
@@ -302,66 +298,23 @@ void loop()
             Add line tracking code here.
             Adjust motor speed according to information from line tracking sensors and
             possibly encoder counts.
-
-
                              servo_LeftMotor.writeMicroseconds(ui_Left_Motor_Speed);
                              servo_RightMotor.writeMicroseconds(ui_Right_Motor_Speed);
-
                              servo_LeftMotor.writeMicroseconds(ci_Left_Motor_Stop);
                              servo_RightMotor.writeMicroseconds(ci_Right_Motor_Stop);
-
                              servo_LeftMotor.writeMicroseconds(ui_Left_Motor_Reverse);
                              servo_RightMotor.writeMicroseconds(ui_Right_Motor_Reverse);
-
                              ui_Left_Line_Tracker_Data < (ui_Left_Line_Tracker_Dark - ci_Line_Tracker_Tolerance)
                              ui_Middle_Line_Tracker_Data < (ui_Middle_Line_Tracker_Dark - ci_Line_Tracker_Tolerance)
                              ui_Right_Line_Tracker_Data < (ui_Right_Line_Tracker_Dark - ci_Line_Tracker_Tolerance)
-
                              ul_Echo_Time
             /*************************************************************************************/
 
           if (bt_Motors_Enabled)
           {
-            if (run_State == 1)
+            if (run_State == 1)//turns until only middle one is on
             {
-              if (ui_Left_Line_Tracker_Data < (ui_Left_Line_Tracker_Dark - ci_Line_Tracker_Tolerance) &&
-                  ui_Right_Line_Tracker_Data < (ui_Right_Line_Tracker_Dark - ci_Line_Tracker_Tolerance))
-              {
-                servo_LeftMotor.writeMicroseconds(ui_Left_Motor_Speed);
-                servo_RightMotor.writeMicroseconds(ui_Right_Motor_Speed);
-                stop_Counter++;
-                if (stop_Counter == 500)
-                {
-                  run_State += 1;
-                  stop_Counter == 0;
-                  //ui_Robot_State_Index = 0;
-                }
-              }
-
-              else if (ui_Left_Line_Tracker_Data < (ui_Left_Line_Tracker_Dark - ci_Line_Tracker_Tolerance))
-              {
-                servo_LeftMotor.writeMicroseconds(ui_Left_Motor_Reverse);
-                servo_RightMotor.writeMicroseconds(ui_Right_Motor_Speed);
-                stop_Counter = 0;
-              }
-
-              else if (ui_Right_Line_Tracker_Data < (ui_Right_Line_Tracker_Dark - ci_Line_Tracker_Tolerance))
-              {
-                servo_LeftMotor.writeMicroseconds(ui_Left_Motor_Speed);
-                servo_RightMotor.writeMicroseconds(ui_Right_Motor_Reverse);
-                stop_Counter = 0;
-              }
-
-              else if (ui_Middle_Line_Tracker_Data < (ui_Middle_Line_Tracker_Dark - ci_Line_Tracker_Tolerance))
-              {
-                servo_LeftMotor.writeMicroseconds(ui_Left_Motor_Speed);
-                servo_RightMotor.writeMicroseconds(ui_Right_Motor_Speed);
-                stop_Counter = 0;
-              }
-            }
-            else if (run_State == 2)
-            {
-              // turn towards led
+              // turn towards led line
               if ((!(ui_Left_Line_Tracker_Data < (ui_Left_Line_Tracker_Dark - ci_Line_Tracker_Tolerance))) &&
                   (ui_Middle_Line_Tracker_Data < (ui_Middle_Line_Tracker_Dark - ci_Line_Tracker_Tolerance)) &&
                   (!(ui_Right_Line_Tracker_Data < (ui_Right_Line_Tracker_Dark - ci_Line_Tracker_Tolerance))))
@@ -373,13 +326,13 @@ void loop()
               }
               else
               {
-                servo_LeftMotor.writeMicroseconds(1415);
-                servo_RightMotor.writeMicroseconds(ui_Left_Motor_Speed);
+                servo_RightMotor.writeMicroseconds(1420);
+                servo_LeftMotor.writeMicroseconds(ui_Left_Motor_Speed);
               }
               // open claw
               servo_GripMotor.write(ci_Grip_Motor_Open);
             }
-            else if (run_State == 3)
+            else if (run_State == 2)//if it hits the box line it stops and goes to next, otherwise it follows line
             {
               // approach platform
               if (ui_Left_Line_Tracker_Data < (ui_Left_Line_Tracker_Dark - ci_Line_Tracker_Tolerance) &&
@@ -406,7 +359,7 @@ void loop()
                 servo_RightMotor.writeMicroseconds(ui_Right_Motor_Speed);
               }
             }
-            else if (run_State == 4)
+            else if (run_State == 3)//look for light by spinning on the spot
             {
               if (!(digitalRead(ci_Light_Sensor)))
               {
@@ -419,7 +372,7 @@ void loop()
                 servo_ArmMotor.write(ci_Arm_Servo_Extended);
                 servo_GripMotor.write(ci_Grip_Motor_Closed);
                 stop_Counter++;
-                if (stop_Counter == 1000)
+                if (stop_Counter == 2000)
                 {
                   servo_ArmMotor.write(ci_Arm_Servo_Retracted);
                   run_State++;
@@ -428,24 +381,24 @@ void loop()
               }
               else
               {
-                servo_LeftMotor.writeMicroseconds(1585);
-                servo_RightMotor.writeMicroseconds(1415);
+                servo_LeftMotor.writeMicroseconds(1600);
+                servo_RightMotor.writeMicroseconds(1400);
                 stop_Counter = 0;
                 servo_ArmMotor.write(ci_Arm_Servo_Retracted);
                 servo_GripMotor.write(ci_Grip_Motor_Open);
               }
             }
-            else if (run_State == 5) {
+            else if (run_State == 4) {//spin away from block
               stop_Counter++;
-              if (stop_Counter < 1000) {
-                servo_RightMotor.writeMicroseconds(1600);
-                servo_LeftMotor.writeMicroseconds(1400);
+              if (stop_Counter < 2200) {
+                servo_RightMotor.writeMicroseconds(1350);
+                servo_LeftMotor.writeMicroseconds(1350);
               }
-              if (stop_Counter > 1000) {
+              if (stop_Counter > 2200) {
                 run_State++;
               }
             }
-            else if (run_State == 6)
+            else if (run_State == 5)//look for line
             {
               if ((!(ui_Left_Line_Tracker_Data < (ui_Left_Line_Tracker_Dark - ci_Line_Tracker_Tolerance))) &&
                   (ui_Middle_Line_Tracker_Data < (ui_Middle_Line_Tracker_Dark - ci_Line_Tracker_Tolerance)) &&
@@ -453,21 +406,120 @@ void loop()
               {
                 servo_LeftMotor.writeMicroseconds(ci_Left_Motor_Stop);
                 servo_RightMotor.writeMicroseconds(ci_Right_Motor_Stop);
-                run_State = 1;
-                //ui_Robot_State_Index = 0;
+                run_State++;
+                //ui_Robot_State_Index = 0; // testing
               }
               else
               {
-                servo_LeftMotor.writeMicroseconds(1415);
-                servo_RightMotor.writeMicroseconds(ui_Left_Motor_Speed);
+                servo_LeftMotor.writeMicroseconds(1400);
+                servo_RightMotor.writeMicroseconds(1600);
               }
-              // retract
-              // reverse
-              // spin 180
-              // reaquire track
-              // return to line following state
-
             }
+            else if (run_State == 6)//standard line following code
+            {
+              if (ui_Left_Line_Tracker_Data < (ui_Left_Line_Tracker_Dark - ci_Line_Tracker_Tolerance) &&
+                  ui_Right_Line_Tracker_Data < (ui_Right_Line_Tracker_Dark - ci_Line_Tracker_Tolerance))
+              {
+                servo_LeftMotor.writeMicroseconds(ui_Left_Motor_Speed);
+                servo_RightMotor.writeMicroseconds(ui_Right_Motor_Speed);
+                stop_Counter++;
+                if (stop_Counter == 500)
+                {
+                  run_State++;
+                  stop_Counter == 0;
+                  //ui_Robot_State_Index = 0;
+                }
+              }
+
+              else if (ui_Left_Line_Tracker_Data < (ui_Left_Line_Tracker_Dark - ci_Line_Tracker_Tolerance))
+              {
+                servo_LeftMotor.writeMicroseconds(ui_Left_Motor_Reverse);
+                servo_RightMotor.writeMicroseconds(ui_Right_Motor_Speed);
+                stop_Counter = 0;
+              }
+
+              else if (ui_Right_Line_Tracker_Data < (ui_Right_Line_Tracker_Dark - ci_Line_Tracker_Tolerance))
+              {
+                servo_LeftMotor.writeMicroseconds(ui_Left_Motor_Speed);
+                servo_RightMotor.writeMicroseconds(ui_Right_Motor_Reverse);
+                stop_Counter = 0;
+              }
+
+              else if (ui_Middle_Line_Tracker_Data < (ui_Middle_Line_Tracker_Dark - ci_Line_Tracker_Tolerance))
+              {
+                servo_LeftMotor.writeMicroseconds(ui_Left_Motor_Speed);
+                servo_RightMotor.writeMicroseconds(ui_Right_Motor_Speed);
+                stop_Counter = 0;
+              }
+            }
+            else if (run_State == 7)//look for line
+            {
+              if ((!(ui_Left_Line_Tracker_Data < (ui_Left_Line_Tracker_Dark - ci_Line_Tracker_Tolerance))) &&
+                  (ui_Middle_Line_Tracker_Data < (ui_Middle_Line_Tracker_Dark - ci_Line_Tracker_Tolerance)) &&
+                  (!(ui_Right_Line_Tracker_Data < (ui_Right_Line_Tracker_Dark - ci_Line_Tracker_Tolerance))))
+              {
+                servo_LeftMotor.writeMicroseconds(ci_Left_Motor_Stop);
+                servo_RightMotor.writeMicroseconds(ci_Right_Motor_Stop);
+                run_State++;
+                //ui_Robot_State_Index = 0; // testing
+              }
+              else
+              {
+                servo_LeftMotor.writeMicroseconds(ui_Left_Motor_Speed);
+                servo_RightMotor.writeMicroseconds(1415);
+              }
+            }
+            else if (run_State == 8)//if it hits the box line it stops and goes to next, otherwise it follows line
+            {
+              // approach platform
+              if (ui_Left_Line_Tracker_Data < (ui_Left_Line_Tracker_Dark - ci_Line_Tracker_Tolerance) &&
+                  ui_Right_Line_Tracker_Data < (ui_Right_Line_Tracker_Dark - ci_Line_Tracker_Tolerance))
+              {
+                servo_LeftMotor.writeMicroseconds(ci_Left_Motor_Stop);
+                servo_RightMotor.writeMicroseconds(ci_Right_Motor_Stop);
+                run_State += 1;
+                servo_ArmMotor.write(ci_Arm_Servo_Extended);
+                //ui_Robot_State_Index = 0;
+              }
+              else if (ui_Left_Line_Tracker_Data < (ui_Left_Line_Tracker_Dark - ci_Line_Tracker_Tolerance))
+              {
+                servo_LeftMotor.writeMicroseconds(ui_Left_Motor_Reverse);
+                servo_RightMotor.writeMicroseconds(ui_Right_Motor_Speed);
+              }
+              else if (ui_Right_Line_Tracker_Data < (ui_Right_Line_Tracker_Dark - ci_Line_Tracker_Tolerance))
+              {
+                servo_LeftMotor.writeMicroseconds(ui_Left_Motor_Speed);
+                servo_RightMotor.writeMicroseconds(ui_Right_Motor_Reverse);
+              }
+              else
+              {
+                servo_LeftMotor.writeMicroseconds(ui_Left_Motor_Speed);
+                servo_RightMotor.writeMicroseconds(ui_Right_Motor_Speed);
+              }
+            }
+            else if(run_State == 9){
+              servo_GripMotor.write(ci_Grip_Motor_Open);
+              stop_Counter++;
+                if (stop_Counter == 500)
+                {
+                  run_State++;
+                  stop_Counter == 0;
+                  //ui_Robot_State_Index = 0;
+                }
+            }
+            else if (run_State == 10){
+              stop_Counter++;
+              if (stop_Counter < 2000) {
+                servo_RightMotor.writeMicroseconds(1400);
+                servo_LeftMotor.writeMicroseconds(1400);
+              }
+              if (stop_Counter > 2000) {
+                ui_Robot_State_Index = 0;
+
+                
+              }
+            }
+            
           }
           else
           {
