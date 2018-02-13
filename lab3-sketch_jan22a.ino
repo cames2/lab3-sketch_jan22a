@@ -364,14 +364,19 @@ void loop()
               if (!(digitalRead(ci_Light_Sensor)))
               {
                 yes = 1;
+                servo_RightMotor.writeMicroseconds(1590);
+                servo_LeftMotor.writeMicroseconds(1410);
               }
               if (yes == 1)
               {
                 servo_LeftMotor.writeMicroseconds(ci_Left_Motor_Stop);
                 servo_RightMotor.writeMicroseconds(ci_Right_Motor_Stop);
                 servo_ArmMotor.write(ci_Arm_Servo_Extended);
-                servo_GripMotor.write(ci_Grip_Motor_Closed);
                 stop_Counter++;
+                if (stop_Counter == 500){
+                  servo_GripMotor.write(ci_Grip_Motor_Closed);
+                }
+
                 if (stop_Counter == 2000)
                 {
                   servo_ArmMotor.write(ci_Arm_Servo_Retracted);
@@ -381,8 +386,8 @@ void loop()
               }
               else
               {
-                servo_LeftMotor.writeMicroseconds(1600);
-                servo_RightMotor.writeMicroseconds(1400);
+                servo_LeftMotor.writeMicroseconds(1590);
+                servo_RightMotor.writeMicroseconds(1410);
                 stop_Counter = 0;
                 servo_ArmMotor.write(ci_Arm_Servo_Retracted);
                 servo_GripMotor.write(ci_Grip_Motor_Open);
@@ -391,8 +396,8 @@ void loop()
             else if (run_State == 4) {//spin away from block
               stop_Counter++;
               if (stop_Counter < 2200) {
-                servo_RightMotor.writeMicroseconds(1350);
-                servo_LeftMotor.writeMicroseconds(1350);
+                servo_RightMotor.writeMicroseconds(1360);
+                servo_LeftMotor.writeMicroseconds(1360);
               }
               if (stop_Counter > 2200) {
                 run_State++;
@@ -497,29 +502,25 @@ void loop()
                 servo_RightMotor.writeMicroseconds(ui_Right_Motor_Speed);
               }
             }
-            else if(run_State == 9){
+            else if (run_State == 9) {
               servo_GripMotor.write(ci_Grip_Motor_Open);
               stop_Counter++;
-                if (stop_Counter == 500)
-                {
-                  run_State++;
-                  stop_Counter == 0;
-                  //ui_Robot_State_Index = 0;
-                }
+              if (stop_Counter == 1000)
+              {
+                run_State++;
+                stop_Counter == 0;
+                //ui_Robot_State_Index = 0;
+              }
             }
-            else if (run_State == 10){
+            else if (run_State == 10) {
               stop_Counter++;
-              if (stop_Counter < 2000) {
-                servo_RightMotor.writeMicroseconds(1400);
-                servo_LeftMotor.writeMicroseconds(1400);
-              }
-              if (stop_Counter > 2000) {
+              servo_RightMotor.writeMicroseconds(1400);
+              servo_LeftMotor.writeMicroseconds(1400);
+              if (stop_Counter > 2600) {
                 ui_Robot_State_Index = 0;
-
-                
               }
             }
-            
+
           }
           else
           {
