@@ -81,18 +81,21 @@ const int ci_Left_Motor_Offset_Address_H = 13;
 const int ci_Right_Motor_Offset_Address_L = 14;
 const int ci_Right_Motor_Offset_Address_H = 15;
 
+//speeds
 const int ci_Left_Motor_Stop = 1500;        // 200 for brake mode; 1500 for stop
 const int ci_Right_Motor_Stop = 1500;
 const int ci_Grip_Motor_Open = 140;         // Experiment to determine appropriate value
 const int ci_Grip_Motor_Closed = 0;        //  "
 const int ci_Arm_Servo_Retracted = 0;      //  "
-const int ci_Arm_Servo_Extended = 60;      //  "
+const int ci_Arm_Servo_Extended = 40;      //  "
 const int ci_Display_Time = 500;
 const int ci_Line_Tracker_Calibration_Interval = 100;
 const int ci_Line_Tracker_Cal_Measures = 20;
 const int ci_Line_Tracker_Tolerance = 169;   // May need to adjust this
 const int ci_Motor_Calibration_Cycles = 3;
 const int ci_Motor_Calibration_Time = 5000;
+const int minWall_distance = AAA;//find intended distance - think about turn
+const int maxWall_distance = BBB;//"
 
 //variables
 byte b_LowByte;
@@ -262,8 +265,6 @@ void loop()
       {
         readLineTrackers();
         Ping();
-        servo_LeftMotor.writeMicroseconds(ci_Left_Motor_Stop);
-        servo_RightMotor.writeMicroseconds(ci_Right_Motor_Stop);
         servo_ArmMotor.write(ci_Arm_Servo_Retracted);
         servo_GripMotor.write(ci_Grip_Motor_Closed);
         encoder_LeftMotor.zero();
@@ -373,7 +374,7 @@ void loop()
                 servo_RightMotor.writeMicroseconds(ci_Right_Motor_Stop);
                 servo_ArmMotor.write(ci_Arm_Servo_Extended);
                 stop_Counter++;
-                if (stop_Counter == 500){
+                if (stop_Counter == 500) {
                   servo_GripMotor.write(ci_Grip_Motor_Closed);
                 }
 
@@ -640,58 +641,96 @@ void loop()
 
     case 4:    //Calibrate motor straightness after 3 seconds.
       {
-        if (bt_3_S_Time_Up)
-        {
-          if (!bt_Cal_Initialized)
-          {
-            bt_Cal_Initialized = true;
-            encoder_LeftMotor.zero();
-            encoder_RightMotor.zero();
-            ul_Calibration_Time = millis();
-            servo_LeftMotor.writeMicroseconds(ui_Motors_Speed);
-            servo_RightMotor.writeMicroseconds(ui_Motors_Speed);
-          }
-          else if ((millis() - ul_Calibration_Time) > ci_Motor_Calibration_Time)
-          {
-            servo_LeftMotor.writeMicroseconds(ci_Left_Motor_Stop);
-            servo_RightMotor.writeMicroseconds(ci_Right_Motor_Stop);
-            l_Left_Motor_Position = encoder_LeftMotor.getRawPosition();
-            l_Right_Motor_Position = encoder_RightMotor.getRawPosition();
-            if (l_Left_Motor_Position > l_Right_Motor_Position)
-            {
-              // May have to update this if different calibration time is used
-              ui_Right_Motor_Offset = 0;
-              ui_Left_Motor_Offset = (l_Left_Motor_Position - l_Right_Motor_Position) / 4;
-            }
-            else
-            {
-              // May have to update this if different calibration time is used
-              ui_Right_Motor_Offset = (l_Right_Motor_Position - l_Left_Motor_Position) / 4;
-              ui_Left_Motor_Offset = 0;
-            }
-
-#ifdef DEBUG_MOTOR_CALIBRATION
-            Serial.print("Motor Offsets: Left = ");
-            Serial.print(ui_Left_Motor_Offset);
-            Serial.print(", Right = ");
-            Serial.println(ui_Right_Motor_Offset);
-#endif
-            EEPROM.write(ci_Right_Motor_Offset_Address_L, lowByte(ui_Right_Motor_Offset));
-            EEPROM.write(ci_Right_Motor_Offset_Address_H, highByte(ui_Right_Motor_Offset));
-            EEPROM.write(ci_Left_Motor_Offset_Address_L, lowByte(ui_Left_Motor_Offset));
-            EEPROM.write(ci_Left_Motor_Offset_Address_H, highByte(ui_Left_Motor_Offset));
-
-            ui_Robot_State_Index = 0;    // go back to Mode 0
-          }
-#ifdef DEBUG_MOTOR_CALIBRATION
-          Serial.print("Encoders L: ");
-          Serial.print(encoder_LeftMotor.getRawPosition());
-          Serial.print(", R: ");
-          Serial.println(encoder_RightMotor.getRawPosition());
-#endif
-          ui_Mode_Indicator_Index = 4;
+        stop_Counter++;
+        if (stop_Counter < 10000) {
+          servo_ArmMotor.write(ci_Arm_Servo_Retracted);
         }
+        else if (stop_Counter < 20000) {
+          servo_ArmMotor.write(ci_Arm_Servo_Extended);
+        }
+        else if (stop_Counter < 30000) {
+          servo_GripMotor.write(ci_Grip_Motor_Closed);
+        }
+        else if (stop_Counter < 40000) {
+          servo_ArmMotor.write(ci_Arm_Servo_Retracted);
+        }
+        else if (stop_Counter < 50000) {
+          servo_GripMotor.write(ci_Grip_Motor_Open);
+          if (stop_Counter == 60000) {
+            stop_Counter = 0;
+          }
+        }
+
+        /* if (bt_3_S_Time_Up)
+          {
+           if (!bt_Cal_Initialized)
+           {
+             bt_Cal_Initialized = true;
+             encoder_LeftMotor.zero();
+             encoder_RightMotor.zero();
+             ul_Calibration_Time = millis();
+             servo_LeftMotor.writeMicroseconds(ui_Motors_Speed);
+             servo_RightMotor.writeMicroseconds(ui_Motors_Speed);
+           }
+           else if ((millis() - ul_Calibration_Time) > ci_Motor_Calibration_Time)
+           {
+             servo_LeftMotor.writeMicroseconds(ci_Left_Motor_Stop);
+             servo_RightMotor.writeMicroseconds(ci_Right_Motor_Stop);
+             l_Left_Motor_Position = encoder_LeftMotor.getRawPosition();
+             l_Right_Motor_Position = encoder_RightMotor.getRawPosition();
+             if (l_Left_Motor_Position > l_Right_Motor_Position)
+             {
+               // May have to update this if different calibration time is used
+               ui_Right_Motor_Offset = 0;
+               ui_Left_Motor_Offset = (l_Left_Motor_Position - l_Right_Motor_Position) / 4;
+             }
+             else
+             {
+               // May have to update this if different calibration time is used
+               ui_Right_Motor_Offset = (l_Right_Motor_Position - l_Left_Motor_Position) / 4;
+               ui_Left_Motor_Offset = 0;
+             }
+
+          #ifdef DEBUG_MOTOR_CALIBRATION
+             Serial.print("Motor Offsets: Left = ");
+             Serial.print(ui_Left_Motor_Offset);
+             Serial.print(", Right = ");
+             Serial.println(ui_Right_Motor_Offset);
+          #endif
+             EEPROM.write(ci_Right_Motor_Offset_Address_L, lowByte(ui_Right_Motor_Offset));
+             EEPROM.write(ci_Right_Motor_Offset_Address_H, highByte(ui_Right_Motor_Offset));
+             EEPROM.write(ci_Left_Motor_Offset_Address_L, lowByte(ui_Left_Motor_Offset));
+             EEPROM.write(ci_Left_Motor_Offset_Address_H, highByte(ui_Left_Motor_Offset));
+
+             ui_Robot_State_Index = 0;    // go back to Mode 0
+           }
+          #ifdef DEBUG_MOTOR_CALIBRATION
+           Serial.print("Encoders L: ");
+           Serial.print(encoder_LeftMotor.getRawPosition());
+           Serial.print(", R: ");
+           Serial.println(encoder_RightMotor.getRawPosition());
+          #endif
+           ui_Mode_Indicator_Index = 4;
+          }*/
         break;
+      }
+    case 5:    //wall tracking testing //driving clockwise
+      {
+//these three should be able to hold it to the wall with correct tolerances... may need more explicit code
+        if ((rearWall_Distance <= maxWall_distance) && (rearWall_Distance >= minWall_distance) && (frontWall_Distance <= maxWall_distance) && (frontWall_Distance >= minWall_distance)) {
+          servo_LeftMotor.writeMicroseconds(1650);
+          servo_RightMotor.writeMicroseconds(1650);
+        }
+        if (rearWall_Distance <= (frontWall_Distance - TOLORANCE)) {
+          servo_LeftMotor.writeMicroseconds(1630);
+          servo_RightMotor.writeMicroseconds(1670);
+        }
+        if (rearWall_Distance >= (frontWall_Distance + TOLORANCE)) {
+          servo_LeftMotor.writeMicroseconds(1670);
+          servo_RightMotor.writeMicroseconds(1630);
+        }
+
+        // break;
       }
   }
 
@@ -785,3 +824,4 @@ void Ping()
   Serial.println(ul_Echo_Time / 58); //divide time by 58 to get distance in cm
 #endif
 }
+
